@@ -21,8 +21,8 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
     self.view.backgroundColor = [UIColor lightGrayColor];
-    [self.view ar_addAndroidRefreshWithDelegate:self];
-    self.view.ar_headerView.refreshOffset = 64.0f;
+    [self.view ar_addAndroidRefreshWithDelegate:self];  // add a android refresh view
+    self.view.ar_headerView.refreshOffset = 64.0f;      // set drag refresh offset
 }
 
 - (void)didReceiveMemoryWarning {
