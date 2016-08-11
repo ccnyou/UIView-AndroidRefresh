@@ -7,7 +7,7 @@
 //
 
 #import "ARAndroidRefreshView.h"
-#import "NSObject+Yoyo.h"
+#import "Masonry.h"
 
 typedef NS_ENUM(NSInteger, ARRefreshStatus) {
     ARRefreshStatusReady,

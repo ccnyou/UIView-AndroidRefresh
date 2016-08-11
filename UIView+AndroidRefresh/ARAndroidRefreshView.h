@@ -11,8 +11,12 @@
 @class ARAndroidRefreshView;
 @protocol AndroidRefreshDelegate <NSObject>
 
-- (BOOL)androidRefreshView:(ARAndroidRefreshView *)refreshView shouldRefreshView:(UIView *)targetView;
+@required
 - (void)androidRefreshView:(ARAndroidRefreshView *)refreshView beginRefreshingView:(UIView *)targetView;
+
+
+@optional
+- (BOOL)androidRefreshView:(ARAndroidRefreshView *)refreshView shouldRefreshView:(UIView *)targetView;
 - (void)androidRefreshViewDidBeginDragging:(ARAndroidRefreshView *)refreshView;
 - (void)androidRefreshViewDidCancel:(ARAndroidRefreshView *)refreshView;
 - (void)androidRefreshViewDidComplete:(ARAndroidRefreshView *)refreshView;
