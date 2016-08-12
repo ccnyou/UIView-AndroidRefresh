@@ -1,5 +1,5 @@
 # UIView-AndroidRefresh
-An android style drop down extention for UIScrollView
+An Android style drop down extention for UIView
 
 # Usage:
 ```objective-c
