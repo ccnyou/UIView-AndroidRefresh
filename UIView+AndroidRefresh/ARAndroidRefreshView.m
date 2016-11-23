@@ -7,7 +7,8 @@
 //
 
 #import "ARAndroidRefreshView.h"
-#import "Masonry.h"
+#import "NSObject+Yoyo.h"
+#import "UIDevice+Yoyo.h"
 
 typedef NS_ENUM(NSInteger, ARRefreshStatus) {
     ARRefreshStatusReady,
@@ -20,23 +21,25 @@ typedef NS_ENUM(NSInteger, ARRefreshStatus) {
 @property (nonatomic, assign) ARRefreshStatus status;
 @property (nonatomic, assign) CGFloat offsetY;
 @property (nonatomic, strong) UIImageView* roundArrowImageView;
-@property (nonatomic, strong) NSTimer*  rotatingTimer;
+@property (nonatomic, strong) NSTimer* rotatingTimer;
 
 @end
 
 @implementation ARAndroidRefreshView
 
-static CGFloat kRoundImageHeight        = 50.0f;       // 圆形图片大小
+static CGFloat kRoundImageHeight        = 45.0f;       // 圆形图片大小
 static CGFloat kPointPerDegree          = 1/5.0f;      // 多少像素转一度
 static CGFloat kRefreshingOffsetY       = 20.0f;       // 至少要滚到这里才开始刷新
 static CGFloat kRotatingTimeInterval    = 0.01f;       // 自转时间间隔
-static CGFloat kBounceOffset            = 30.0f;       // 松手之后往下弹多少
+static CGFloat kBounceOffset            = 0.0f;        // 松手之后往下弹多少
 static CGFloat kAotoRotating            = 0.04f;       // 自转参考系数
+static CGFloat kRefreshTimeout          = 10.0f;       // 默认刷新超时时间
 
 - (instancetype)init {
     self = [super init];
     if (self) {
-        _refreshOffset = kRefreshingOffsetY;
+        [self _initMembers];
+        [self _initSubview];
     }
     
     return self;
@@ -50,26 +53,36 @@ static CGFloat kAotoRotating            = 0.04f;       // 自转参考系数
 }
 
 - (void)finishRefreshing {
+    if (self.status != ARRefreshStatusRefreshing) {
+        return;
+    }
+    
     [self _endRefreshing];
 }
 
-- (UIImageView *)roundArrowImageView {
-    if (!_roundArrowImageView) {
-        _roundArrowImageView = [[UIImageView alloc] init];
-        _roundArrowImageView.image = [UIImage imageNamed:@"refresh_round_arrow"];
-        [self addSubview:_roundArrowImageView];
-        [_roundArrowImageView mas_makeConstraints:^(MASConstraintMaker *make) {
-            make.top.mas_equalTo(0);
-            make.centerX.mas_equalTo(self.mas_centerX);
-            make.width.mas_equalTo(kRoundImageHeight);
-            make.height.mas_equalTo(kRoundImageHeight);
-        }];
-    }
-    
-    return _roundArrowImageView;
+- (CGFloat)height {
+    return kRoundImageHeight;
 }
 
 #pragma mark - Private
+
+- (void)_initMembers {
+    _refreshOffset = kRefreshingOffsetY;    // 默认值
+    _maxRefreshOffset = 0;                  // 没有限制
+    _refreshPosition = kRefreshingOffsetY;  // 默认值
+    _refreshTimeout = kRefreshTimeout;
+}
+
+- (void)_initSubview {
+    // 需要通过修改 transform 实现旋转
+    // iOS 7 上面 transform 跟 自动布局有冲突，
+    // 解决方案是需要修改 transform 的视图不使用自动布局
+    CGFloat left = (kYoYoScreenWidth - kRoundImageHeight) / 2;
+    CGRect frame = CGRectMake(left, 0, kRoundImageHeight, kRoundImageHeight);
+    _roundArrowImageView = [[UIImageView alloc] initWithFrame:frame];
+    _roundArrowImageView.image = [UIImage imageNamed:@"refresh_round_arrow"];
+    [self addSubview:_roundArrowImageView];
+}
 
 - (void)_addGestureRecognizer:(UIView *)scrollView {
     UIPanGestureRecognizer* gestureRecognizer = [[UIPanGestureRecognizer alloc] initWithTarget:self
@@ -95,6 +108,10 @@ static CGFloat kAotoRotating            = 0.04f;       // 自转参考系数
         if ([self.delegate respondsToSelector:@selector(androidRefreshView:beginRefreshingView:)]) {
             [self.delegate androidRefreshView:self beginRefreshingView:self.refreshView];
         }
+    }];
+    
+    [self yoyo_delay:self.refreshTimeout performBlock:^{
+        [self finishRefreshing];
     }];
 }
 
@@ -122,18 +139,25 @@ static CGFloat kAotoRotating            = 0.04f;       // 自转参考系数
     CGRect frame = self.frame;
     frame.origin.y = -CGRectGetHeight(frame);
     
+    [self layoutIfNeeded];
+    [self.superview layoutIfNeeded];
+    
     [self mas_updateConstraints:^(MASConstraintMaker *make) {
         make.top.mas_equalTo(frame.origin.y);
     }];
-    
     [UIView animateWithDuration:0.5f animations:^{
         [self layoutIfNeeded];
+        [self.superview layoutIfNeeded];
     }];
 }
 
 - (void)_showDraggingStatus:(CGFloat)dy {
     CGRect frame = self.frame;
     frame.origin.y += dy;
+    if (frame.origin.y > self.maxRefreshOffset && self.maxRefreshOffset > 0) {
+        frame.origin.y = self.maxRefreshOffset;
+    }
+    
     [self mas_updateConstraints:^(MASConstraintMaker *make) {
         make.top.mas_equalTo(frame.origin.y);
     }];
@@ -151,10 +175,11 @@ static CGFloat kAotoRotating            = 0.04f;       // 自转参考系数
         
         CGRect frame = self.frame;
         frame.origin.y += kBounceOffset;
-        [self mas_updateConstraints:^(MASConstraintMaker *make) {
-            make.top.mas_equalTo(frame.origin.y);
-        }];
-        [self layoutIfNeeded];
+            [self mas_updateConstraints:^(MASConstraintMaker *make) {
+                make.top.mas_equalTo(frame.origin.y);
+            }];
+            [self layoutIfNeeded];
+            [self.superview layoutIfNeeded];
     };
     
     id moveUpBlock = ^{
@@ -163,9 +188,10 @@ static CGFloat kAotoRotating            = 0.04f;       // 自转参考系数
         }
         
         [self mas_updateConstraints:^(MASConstraintMaker *make) {
-            make.top.mas_equalTo(self.refreshOffset);
+            make.top.mas_equalTo(self.refreshPosition);
         }];
         [self layoutIfNeeded];
+        [self.superview layoutIfNeeded];
     };
     
     [UIView animateWithDuration:0.05f
@@ -173,7 +199,10 @@ static CGFloat kAotoRotating            = 0.04f;       // 自转参考系数
                      completion:^(BOOL finished)
      {
          if (finished) {
-             [UIView animateWithDuration:0.5f animations:moveUpBlock completion:^(BOOL finished) {
+             [UIView animateWithDuration:0.5f
+                              animations:moveUpBlock
+                              completion:^(BOOL finished)
+             {
                  if (finished && complete) {
                      complete();
                  }

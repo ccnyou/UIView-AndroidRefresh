@@ -8,7 +8,6 @@
 
 #import <objc/runtime.h>
 #import "UIView+AndroidRefresh.h"
-#import "Masonry.h"
 
 @interface UIView () <UIGestureRecognizerDelegate>
 
