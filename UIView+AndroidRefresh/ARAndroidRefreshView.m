@@ -24,13 +24,13 @@ typedef NS_ENUM(NSInteger, ARRefreshStatus) {
 
 @implementation ARAndroidRefreshView
 
-static CGFloat kRoundImageHeight        = 45.0f;       // 圆形图片大小
-static CGFloat kPointPerDegree          = 1/5.0f;      // 多少像素转一度
-static CGFloat kRefreshingOffsetY       = 20.0f;       // 至少要滚到这里才开始刷新
-static CGFloat kRotatingTimeInterval    = 0.01f;       // 自转时间间隔
-static CGFloat kBounceOffset            = 0.0f;        // 松手之后往下弹多少
-static CGFloat kAotoRotating            = 0.04f;       // 自转参考系数
-static CGFloat kRefreshTimeout          = 10.0f;       // 默认刷新超时时间
+static const CGFloat kRoundImageHeight        = 45.0f;       // 圆形图片大小
+static const CGFloat kPointPerDegree          = 1/5.0f;      // 多少像素转一度
+static const CGFloat kRefreshingOffsetY       = 20.0f;       // 至少要滚到这里才开始刷新
+static const CGFloat kRotatingTimeInterval    = 0.01f;       // 自转时间间隔
+static const CGFloat kBounceOffset            = 0.0f;        // 松手之后往下弹多少
+static const CGFloat kAotoRotating            = 0.04f;       // 自转参考系数
+static const CGFloat kRefreshTimeout          = 10.0f;       // 默认刷新超时时间
 
 - (instancetype)init {
     self = [super init];

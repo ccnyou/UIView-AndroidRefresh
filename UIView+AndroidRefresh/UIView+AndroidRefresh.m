@@ -10,13 +10,9 @@
 #import "UIView+AndroidRefresh.h"
 #import "Masonry.h"
 
-@interface UIView () <UIGestureRecognizerDelegate>
-
-@end
+static const CGFloat kHeaderViewHeight = 55.0f;
 
 @implementation UIView (AndroidRefresh)
-
-static const CGFloat kHeaderViewHeight = 55.0f;
 
 - (void)ar_addAndroidRefreshWithDelegate:(id<AndroidRefreshDelegate>)delegate {
     ARAndroidRefreshView* header = [[ARAndroidRefreshView alloc] init];

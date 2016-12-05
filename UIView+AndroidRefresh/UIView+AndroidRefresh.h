@@ -10,7 +10,6 @@
 #import "ARAndroidRefreshView.h"
 
 @interface UIView (AndroidRefresh)
-
 @property (nonatomic) ARAndroidRefreshView* ar_headerView;
 
 - (void)ar_addAndroidRefreshWithDelegate:(id<AndroidRefreshDelegate>)delegate;
