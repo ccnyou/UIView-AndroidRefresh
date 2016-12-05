@@ -7,8 +7,7 @@
 //
 
 #import "ARAndroidRefreshView.h"
-#import "NSObject+Yoyo.h"
-#import "UIDevice+Yoyo.h"
+#import "Masonry.h"
 
 typedef NS_ENUM(NSInteger, ARRefreshStatus) {
     ARRefreshStatusReady,
@@ -17,12 +16,10 @@ typedef NS_ENUM(NSInteger, ARRefreshStatus) {
 };
 
 @interface ARAndroidRefreshView () <UIGestureRecognizerDelegate>
-
 @property (nonatomic, assign) ARRefreshStatus status;
 @property (nonatomic, assign) CGFloat offsetY;
 @property (nonatomic, strong) UIImageView* roundArrowImageView;
 @property (nonatomic, strong) NSTimer* rotatingTimer;
-
 @end
 
 @implementation ARAndroidRefreshView
@@ -77,7 +74,8 @@ static CGFloat kRefreshTimeout          = 10.0f;       // 默认刷新超时时�
     // 需要通过修改 transform 实现旋转
     // iOS 7 上面 transform 跟 自动布局有冲突，
     // 解决方案是需要修改 transform 的视图不使用自动布局
-    CGFloat left = (kYoYoScreenWidth - kRoundImageHeight) / 2;
+    CGFloat screenWidth = [UIScreen mainScreen].bounds.size.width;
+    CGFloat left = (screenWidth - kRoundImageHeight) / 2;
     CGRect frame = CGRectMake(left, 0, kRoundImageHeight, kRoundImageHeight);
     _roundArrowImageView = [[UIImageView alloc] initWithFrame:frame];
     _roundArrowImageView.image = [UIImage imageNamed:@"refresh_round_arrow"];
@@ -110,9 +108,9 @@ static CGFloat kRefreshTimeout          = 10.0f;       // 默认刷新超时时�
         }
     }];
     
-    [self yoyo_delay:self.refreshTimeout performBlock:^{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, self.refreshTimeout * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
         [self finishRefreshing];
-    }];
+    });
 }
 
 - (void)_cancelRefreshing {
