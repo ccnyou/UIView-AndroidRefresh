@@ -20,6 +20,7 @@ typedef NS_ENUM(NSInteger, ARRefreshStatus) {
 @property (nonatomic, assign) CGFloat offsetY;
 @property (nonatomic, strong) UIImageView* roundArrowImageView;
 @property (nonatomic, strong) NSTimer* rotatingTimer;
+@property (nonatomic, assign) BOOL isImpactOccurred;
 @end
 
 @implementation ARAndroidRefreshView
@@ -92,6 +93,7 @@ static const CGFloat kRefreshTimeout          = 10.0f;       // 默认刷新超�
 - (void)_beginDragging {
     [self.refreshView bringSubviewToFront:self]; // 避免被新加入的view挡住
     self.status = ARRefreshStatusDragging;
+    self.isImpactOccurred = NO;
     [self _showDraggingStatus:0];
     
     if ([self.delegate respondsToSelector:@selector(androidRefreshViewDidBeginDragging:)]) {
@@ -163,6 +165,16 @@ static const CGFloat kRefreshTimeout          = 10.0f;       // 默认刷新超�
     
     CGFloat degree = dy / kPointPerDegree / 180.0f * M_PI;
     self.roundArrowImageView.transform = CGAffineTransformRotate(self.roundArrowImageView.transform, degree);
+    
+    // 震动反馈
+    if (@available(iOS 10.0, *)) {
+        CGFloat offsetY = CGRectGetMinY(frame);
+        if (offsetY >= self.refreshOffset && !self.isImpactOccurred) {
+            self.isImpactOccurred = YES;
+            UIImpactFeedbackGenerator *feedBackGenertor = [[UIImpactFeedbackGenerator alloc] initWithStyle:UIImpactFeedbackStyleMedium];
+            [feedBackGenertor impactOccurred];
+        }
+    }
 }
 
 - (void)_showBeginRefreshStatus:(void (^)(void))complete {
